@@ -13,6 +13,9 @@ cleanup-tests:
 tests: prepare-tests
 	LOCALAGI_MCPBOX_URL="http://localhost:9090" LOCALAGI_MODEL="gemma-3-12b-it-qat" LOCALAI_API_URL="http://localhost:8081" LOCALAGI_API_URL="http://localhost:8080" $(GOCMD) run github.com/onsi/ginkgo/v2/ginkgo --fail-fast -v -r ./...
 
+tests-mock: prepare-tests
+	LOCALAGI_MCPBOX_URL="http://localhost:9090" LOCALAI_API_URL="http://localhost:8081" LOCALAGI_API_URL="http://localhost:8080" $(GOCMD) run github.com/onsi/ginkgo/v2/ginkgo --fail-fast -v -r ./...
+
 run-nokb:
 	$(MAKE) run KBDISABLEINDEX=true
 
