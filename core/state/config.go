@@ -31,6 +31,11 @@ func (d DynamicPromptsConfig) ToMap() map[string]string {
 	return config
 }
 
+type FiltersConfig struct {
+	Type   string `json:"type"`
+	Config string `json:"config"`
+}
+
 type AgentConfig struct {
 	Connector        []ConnectorConfig      `json:"connectors" form:"connectors" `
 	Actions          []ActionsConfig        `json:"actions" form:"actions"`
@@ -67,9 +72,12 @@ type AgentConfig struct {
 	LongTermMemory        bool   `json:"long_term_memory" form:"long_term_memory"`
 	SummaryLongTermMemory bool   `json:"summary_long_term_memory" form:"summary_long_term_memory"`
 	ParallelJobs          int    `json:"parallel_jobs" form:"parallel_jobs"`
+
+	Filters []FiltersConfig `json:"filters" form:"filters"`
 }
 
 type AgentConfigMeta struct {
+	Filters         []config.FieldGroup
 	Fields         []config.Field
 	Connectors     []config.FieldGroup
 	Actions        []config.FieldGroup
@@ -81,8 +89,10 @@ func NewAgentConfigMeta(
 	actionsConfig []config.FieldGroup,
 	connectorsConfig []config.FieldGroup,
 	dynamicPromptsConfig []config.FieldGroup,
+	filtersConfig []config.FieldGroup,
 ) AgentConfigMeta {
 	return AgentConfigMeta{
+		Filters: filtersConfig,
 		Fields: []config.Field{
 			{
 				Name:         "name",
