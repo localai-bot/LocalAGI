@@ -490,6 +490,15 @@ func (a *Agent) processUserInputs(job *types.Job, role string, conv Messages) Me
 	return conv
 }
 
+func (a *Agent) filterJob(job *types.Job) (bool, error) {
+	for _, filter := range a.options.jobFilters {
+		ok, err := filter.Apply(job)
+		if !ok {
+			return false, err
+		}
+	}
+}
+
 func (a *Agent) consumeJob(job *types.Job, role string) {
 
 	if err := job.GetContext().Err(); err != nil {
