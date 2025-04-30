@@ -44,6 +44,7 @@ type AgentConfig struct {
 	MCPSTDIOServers  []agent.MCPSTDIOServer `json:"mcp_stdio_servers" form:"mcp_stdio_servers"`
 	MCPPrepareScript string                 `json:"mcp_prepare_script" form:"mcp_prepare_script"`
 	MCPBoxURL        string                 `json:"mcp_box_url" form:"mcp_box_url"`
+	Filters          []FiltersConfig        `json:"filters" form:"filters"`
 
 	Description string `json:"description" form:"description"`
 
@@ -72,12 +73,10 @@ type AgentConfig struct {
 	LongTermMemory        bool   `json:"long_term_memory" form:"long_term_memory"`
 	SummaryLongTermMemory bool   `json:"summary_long_term_memory" form:"summary_long_term_memory"`
 	ParallelJobs          int    `json:"parallel_jobs" form:"parallel_jobs"`
-
-	Filters []FiltersConfig `json:"filters" form:"filters"`
 }
 
 type AgentConfigMeta struct {
-	Filters         []config.FieldGroup
+	Filters        []config.FieldGroup
 	Fields         []config.Field
 	Connectors     []config.FieldGroup
 	Actions        []config.FieldGroup

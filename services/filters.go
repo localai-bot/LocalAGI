@@ -8,7 +8,7 @@ import (
 )
 
 // Filters loads all filters from agent config.
-func Filters(a *state.AgentConfig) []types.JobFilter {
+func Filters(a *state.AgentConfig) types.JobFilters {
 	var result []types.JobFilter
 	for _, f := range a.Filters {
 		switch f.Type {

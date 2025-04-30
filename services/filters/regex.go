@@ -14,6 +14,7 @@ type RegexFilter struct {
 	name         string
 	pattern      *regexp.Regexp
 	allowOnMatch bool
+	isTrigger    bool
 }
 
 type RegexFilterConfig struct {
@@ -45,6 +46,10 @@ func (f *RegexFilter) Apply(job *types.Job) (bool, error) {
 		return f.allowOnMatch, nil
 	}
 	return !f.allowOnMatch, nil
+}
+
+func (f *RegexFilter) IsTrigger() bool {
+	return f.isTrigger
 }
 
 func RegexFilterConfigMeta() config.FieldGroup {

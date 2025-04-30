@@ -182,7 +182,7 @@ func (a *Agent) Execute(j *types.Job) *types.JobResult {
 	if j.Obs != nil {
 		if len(j.ConversationHistory) > 0 {
 			m := j.ConversationHistory[len(j.ConversationHistory)-1]
-			j.Obs.Creation = &types.Creation{ ChatCompletionMessage: &m }
+			j.Obs.Creation = &types.Creation{ChatCompletionMessage: &m}
 			a.observer.Update(*j.Obs)
 		}
 
@@ -490,13 +490,57 @@ func (a *Agent) processUserInputs(job *types.Job, role string, conv Messages) Me
 	return conv
 }
 
-func (a *Agent) filterJob(job *types.Job) (bool, error) {
+func (a *Agent) filterJob(job *types.Job) (ok bool, err error) {
+	hasTriggers := false
+	triggeredBy := ""
+	failedBy := ""
+
 	for _, filter := range a.options.jobFilters {
-		ok, err := filter.Apply(job)
-		if !ok {
-			return false, err
+		name := filter.Name()
+		if triggeredBy != "" && filter.IsTrigger() {
+			continue
+		}
+
+		ok, err = filter.Apply(job)
+		if err != nil {
+			xlog.Error("Error in job filter", "filter", name, "error", err)
+			break
+		}
+
+		if filter.IsTrigger() {
+			hasTriggers = true
+			if ok {
+				triggeredBy = name
+				xlog.Info("Job triggered by filter", "filter", name)
+			}
+		} else if !ok {
+			failedBy = name
+			xlog.Info("Job failed filter", "filter", name)
+			break
+		}
+		xlog.Info("Job passed filter", "filter", name)
+	}
+
+	if a.Observer() != nil {
+		obs := a.Observer().NewObservable()
+		obs.Name = "filter"
+		obs.Icon = "shield"
+		obs.ParentID = job.Obs.ID
+		if err == nil {
+			obs.Completion = &types.Completion{
+				FilterResult: &types.FilterResult{
+					TriggeredBy: triggeredBy,
+					FailedBy:    failedBy,
+				},
+			}
+		} else {
+			obs.Completion = &types.Completion{
+				Error: err.Error(),
+			}
 		}
 	}
+
+	return failedBy != "" && (!hasTriggers || triggeredBy != ""), nil
 }
 
 func (a *Agent) consumeJob(job *types.Job, role string) {
@@ -535,6 +579,14 @@ func (a *Agent) consumeJob(job *types.Job, role string) {
 	}
 
 	conv = a.processPrompts(conv)
+	if ok, err := a.filterJob(job); !ok || err != nil {
+		if err != nil {
+			job.Result.Finish(fmt.Errorf("Error in job filter: %w", err))
+		} else {
+			job.Result.Finish(nil)
+		}
+		return
+	}
 	conv = a.processUserInputs(job, role, conv)
 
 	// RAG
