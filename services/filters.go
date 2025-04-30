@@ -4,18 +4,12 @@ import (
 	"github.com/mudler/LocalAGI/core/state"
 	"github.com/mudler/LocalAGI/core/types"
 	"github.com/mudler/LocalAGI/pkg/config"
-	filters "github.com/mudler/LocalAGI/services/filters"
+	"github.com/mudler/LocalAGI/services/filters"
 )
 
-// JobFilter is the interface for all job filters.
-type JobFilter interface {
-	Name() string
-	Apply(job *types.Job) (bool, error)
-}
-
 // Filters loads all filters from agent config.
-func Filters(a *state.AgentConfig) []JobFilter {
-	var result []JobFilter
+func Filters(a *state.AgentConfig) []types.JobFilter {
+	var result []types.JobFilter
 	for _, f := range a.Filters {
 		switch f.Type {
 		case filters.FilterRegex:
