@@ -39,7 +39,7 @@ const FiltersSection = ({ formData, setFormData, metadata }) => {
     <div className="filters-section">
       <h3>Filters</h3>
       <p className="text-muted">
-        Configure filters that the agent can perform.
+        Jobs received by the agent must pass all filters and at least one trigger (if any are specified)
       </p>
 
       <FilterForm

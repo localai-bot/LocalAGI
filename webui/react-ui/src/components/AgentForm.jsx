@@ -11,6 +11,7 @@ import ModelSettingsSection from './agent-form-sections/ModelSettingsSection';
 import PromptsGoalsSection from './agent-form-sections/PromptsGoalsSection';
 import AdvancedSettingsSection from './agent-form-sections/AdvancedSettingsSection';
 import ExportSection from './agent-form-sections/ExportSection';
+import FiltersSection from './agent-form-sections/FiltersSection';
 
 const AgentForm = ({ 
   isEdit = false, 

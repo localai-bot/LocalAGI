@@ -495,6 +495,11 @@ func (a *Agent) filterJob(job *types.Job) (ok bool, err error) {
 	triggeredBy := ""
 	failedBy := ""
 
+	if len(a.options.jobFilters) < 1 {
+		xlog.Debug("No filters")
+		return true, nil
+	}
+
 	for _, filter := range a.options.jobFilters {
 		name := filter.Name()
 		if triggeredBy != "" && filter.IsTrigger() {
@@ -512,13 +517,14 @@ func (a *Agent) filterJob(job *types.Job) (ok bool, err error) {
 			if ok {
 				triggeredBy = name
 				xlog.Info("Job triggered by filter", "filter", name)
-			}
+			} 
 		} else if !ok {
 			failedBy = name
 			xlog.Info("Job failed filter", "filter", name)
 			break
+		} else {
+			xlog.Debug("Job passed filter", "filter", name)
 		}
-		xlog.Info("Job passed filter", "filter", name)
 	}
 
 	if a.Observer() != nil {
@@ -529,6 +535,7 @@ func (a *Agent) filterJob(job *types.Job) (ok bool, err error) {
 		if err == nil {
 			obs.Completion = &types.Completion{
 				FilterResult: &types.FilterResult{
+					HasTriggers: hasTriggers,
 					TriggeredBy: triggeredBy,
 					FailedBy:    failedBy,
 				},
@@ -538,9 +545,10 @@ func (a *Agent) filterJob(job *types.Job) (ok bool, err error) {
 				Error: err.Error(),
 			}
 		}
+		a.Observer().Update(*obs)
 	}
 
-	return failedBy != "" && (!hasTriggers || triggeredBy != ""), nil
+	return failedBy == "" && (!hasTriggers || triggeredBy != ""), nil
 }
 
 func (a *Agent) consumeJob(job *types.Job, role string) {

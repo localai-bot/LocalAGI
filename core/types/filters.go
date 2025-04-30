@@ -9,6 +9,7 @@ type JobFilter interface {
 type JobFilters []JobFilter
 
 type FilterResult struct {
+	HasTriggers bool `json:"has_triggers"`
 	TriggeredBy string `json:"triggered_by,omitempty"`
 	FailedBy string `json:"failed_by,omitempty"`
 }

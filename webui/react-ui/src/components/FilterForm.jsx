@@ -18,8 +18,8 @@ const FilterForm = ({ filters = [], onChange, onRemove, onAdd, fieldGroups = [] 
       onRemove={onRemove}
       onAdd={onAdd}
       itemType="filter"
-      typeField="name"
       addButtonText="Add Filter"
+      saveAllFieldsAsString={false}
     />
   );
 };

@@ -4,10 +4,10 @@ import (
 	"github.com/mudler/LocalAGI/core/state"
 	"github.com/mudler/LocalAGI/core/types"
 	"github.com/mudler/LocalAGI/pkg/config"
+	"github.com/mudler/LocalAGI/pkg/xlog"
 	"github.com/mudler/LocalAGI/services/filters"
 )
 
-// Filters loads all filters from agent config.
 func Filters(a *state.AgentConfig) types.JobFilters {
 	var result []types.JobFilter
 	for _, f := range a.Filters {
@@ -15,11 +15,12 @@ func Filters(a *state.AgentConfig) types.JobFilters {
 		case filters.FilterRegex:
 			filter, err := filters.NewRegexFilter(f.Config)
 			if err != nil {
-				// log error if needed
+				xlog.Error("Failed to configure regex", "err", err.Error())
 				continue
 			}
 			result = append(result, filter)
-			// Add other filter types here
+		default:
+			xlog.Error("Unrecognized filter type", "type", f.Type)
 		}
 	}
 	return result

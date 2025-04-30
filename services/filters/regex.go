@@ -21,6 +21,7 @@ type RegexFilterConfig struct {
 	Name         string `json:"name"`
 	Pattern      string `json:"pattern"`
 	AllowOnMatch bool   `json:"allow_on_match"`
+	IsTrigger    bool   `json:"is_trigger"`
 }
 
 func NewRegexFilter(configJSON string) (*RegexFilter, error) {
@@ -36,6 +37,7 @@ func NewRegexFilter(configJSON string) (*RegexFilter, error) {
 		name:         cfg.Name,
 		pattern:      re,
 		allowOnMatch: cfg.AllowOnMatch,
+		isTrigger:    cfg.IsTrigger,
 	}, nil
 }
 
@@ -55,11 +57,12 @@ func (f *RegexFilter) IsTrigger() bool {
 func RegexFilterConfigMeta() config.FieldGroup {
 	return config.FieldGroup{
 		Name:  FilterRegex,
-		Label: "Regex Filter",
+		Label: "Regex Filter/Trigger",
 		Fields: []config.Field{
 			{Name: "name", Label: "Name", Type: "text", Required: true},
 			{Name: "pattern", Label: "Pattern", Type: "text", Required: true},
 			{Name: "allow_on_match", Label: "Allow on Match", Type: "checkbox", Required: true},
+			{Name: "is_trigger", Label: "Is Trigger", Type: "checkbox", Required: true},
 		},
 	}
 }
