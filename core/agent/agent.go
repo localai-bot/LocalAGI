@@ -495,6 +495,11 @@ func (a *Agent) filterJob(job *types.Job) (ok bool, err error) {
 	triggeredBy := ""
 	failedBy := ""
 
+	if job.DoneFilter {
+		return true, nil
+	}
+	job.DoneFilter = true
+
 	if len(a.options.jobFilters) < 1 {
 		xlog.Debug("No filters")
 		return true, nil
@@ -509,6 +514,7 @@ func (a *Agent) filterJob(job *types.Job) (ok bool, err error) {
 		ok, err = filter.Apply(job)
 		if err != nil {
 			xlog.Error("Error in job filter", "filter", name, "error", err)
+			failedBy = name
 			break
 		}
 

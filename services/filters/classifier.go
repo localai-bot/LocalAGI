@@ -3,7 +3,6 @@ package filters
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/mudler/LocalAGI/core/state"
 	"github.com/mudler/LocalAGI/core/types"
@@ -13,13 +12,13 @@ import (
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
-const FilterClassifier = "regex"
+const FilterClassifier = "classifier"
 
 type ClassifierFilter struct {
 	name         string
 	client       *openai.Client
 	model        string
-	assertion    string
+	description  string
 	allowOnMatch bool
 	isTrigger    bool
 }
@@ -27,7 +26,8 @@ type ClassifierFilter struct {
 type ClassifierFilterConfig struct {
 	Name         string `json:"name"`
 	Model        string `json:"model,omitempty"`
-	Assertion    string `json:"assertion"`
+	APIURL       string `json:"api_url,omitempty"`
+	Description  string `json:"description"`
 	AllowOnMatch bool   `json:"allow_on_match"`
 	IsTrigger    bool   `json:"is_trigger"`
 }
@@ -44,17 +44,21 @@ func NewClassifierFilter(configJSON string, a *state.AgentConfig) (*ClassifierFi
 		model = a.Model
 	}
 	if cfg.Name == "" {
-	  return nil, fmt.Errorf("Classifier with no name")
+		return nil, fmt.Errorf("Classifier with no name")
 	}
-	if cfg.Assertion == "" {
-	  return nil, fmt.Errorf("%s classifier has not assertion", cfg.Name)
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("%s classifier has no description", cfg.Name)
 	}
-	client := llm.NewClient(a.APIKey, a.APIURL, "1m")
+	apiUrl := a.APIURL
+	if cfg.APIURL != "" {
+		apiUrl = cfg.APIURL
+	}
+	client := llm.NewClient(a.APIKey, apiUrl, "1m")
 
-  return &ClassifierFilter{
+	return &ClassifierFilter{
 		name:         cfg.Name,
 		model:        model,
-		assertion:    cfg.Assertion,
+		description:  cfg.Description,
 		client:       client,
 		allowOnMatch: cfg.AllowOnMatch,
 		isTrigger:    cfg.IsTrigger,
@@ -62,29 +66,27 @@ func NewClassifierFilter(configJSON string, a *state.AgentConfig) (*ClassifierFi
 }
 
 const fmtT = `
-# Assertion about message
-%s
+  Does the below message fit the description "%s"
 
-# Message
-%s
-`
+  %s
+  `
 
 func (f *ClassifierFilter) Name() string { return f.name }
 func (f *ClassifierFilter) Apply(job *types.Job) (bool, error) {
 	input := extractInputFromJob(job)
-	guidance := fmt.Sprintf(fmtT, f.assertion, strings.ReplaceAll(input, "#", ""))
+	guidance := fmt.Sprintf(fmtT, f.description, input)
 	var result struct {
-		Asserted bool `json:"assertion_is_correct"`
+		Asserted bool `json:"answer"`
 	}
 	err := llm.GenerateTypedJSON(job.GetContext(), f.client, guidance, f.model, jsonschema.Definition{
 		Type: jsonschema.Object,
 		Properties: map[string]jsonschema.Definition{
-			"assertion_is_correct": {
+			"answer": {
 				Type:        jsonschema.Boolean,
-				Description: fmt.Sprintf("The following assertion is correct: %s", f.assertion),
+				Description: "The answer to the first question",
 			},
 		},
-		Required: []string{"assertion_is_correct"},
+		Required: []string{"answer"},
 	}, &result)
 	if err != nil {
 		return false, err
@@ -106,10 +108,12 @@ func ClassifierFilterConfigMeta() config.FieldGroup {
 		Label: "Classifier Filter/Trigger",
 		Fields: []config.Field{
 			{Name: "name", Label: "Name", Type: "text", Required: true},
-			{Name: "model", Label: "Model", Type: "text", Required: false, 
-			  HelpText: "The LLM to use, usually a smaller one. Leave blank to use the same as the agent's"},
-			{Name: "assertion", Label: "Assertion", Type: "text", Required: true,
-			  HelpText: "Statement to match against e.g. 'The message is a question'"},
+			{Name: "model", Label: "Model", Type: "text", Required: false,
+				HelpText: "The LLM to use, usually a smaller one. Leave blank to use the same as the agent's"},
+			{Name: "api_url", Label: "API URL", Type: "url", Required: false,
+				HelpText: "The URL of the LLM service if different from the agent's"},
+			{Name: "description", Label: "Description", Type: "text", Required: true,
+				HelpText: "Describe the type of content to match against e.g. 'technical support request'"},
 			{Name: "allow_on_match", Label: "Allow on Match", Type: "checkbox", Required: true},
 			{Name: "is_trigger", Label: "Is Trigger", Type: "checkbox", Required: true},
 		},

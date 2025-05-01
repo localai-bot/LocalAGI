@@ -91,7 +91,6 @@ func NewAgentConfigMeta(
 	filtersConfig []config.FieldGroup,
 ) AgentConfigMeta {
 	return AgentConfigMeta{
-		Filters: filtersConfig,
 		Fields: []config.Field{
 			{
 				Name:         "name",
@@ -319,6 +318,7 @@ func NewAgentConfigMeta(
 		DynamicPrompts: dynamicPromptsConfig,
 		Connectors:     connectorsConfig,
 		Actions:        actionsConfig,
+		Filters:        filtersConfig,
 	}
 }
 

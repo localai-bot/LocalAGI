@@ -11,17 +11,26 @@ import (
 func Filters(a *state.AgentConfig) types.JobFilters {
 	var result []types.JobFilter
 	for _, f := range a.Filters {
+		var filter types.JobFilter
+		var err error
 		switch f.Type {
-		case filters.FilterClassifier:
-			filter, err := filters.NewRegexFilter(f.Config)
+		case filters.FilterRegex:
+			filter, err = filters.NewRegexFilter(f.Config)
 			if err != nil {
 				xlog.Error("Failed to configure regex", "err", err.Error())
 				continue
 			}
-			result = append(result, filter)
+		case filters.FilterClassifier:
+			filter, err = filters.NewClassifierFilter(f.Config, a)
+			if err != nil {
+				xlog.Error("failed to configure classifier", "err", err.Error())
+				continue
+			}
 		default:
 			xlog.Error("Unrecognized filter type", "type", f.Type)
+			continue
 		}
+		result = append(result, filter)
 	}
 	return result
 }
@@ -30,6 +39,6 @@ func Filters(a *state.AgentConfig) types.JobFilters {
 func FiltersConfigMeta() []config.FieldGroup {
 	return []config.FieldGroup{
 		filters.RegexFilterConfigMeta(),
-		// Add other filter config metas here
+		filters.ClassifierFilterConfigMeta(),
 	}
 }
