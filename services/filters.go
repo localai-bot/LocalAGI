@@ -12,7 +12,7 @@ func Filters(a *state.AgentConfig) types.JobFilters {
 	var result []types.JobFilter
 	for _, f := range a.Filters {
 		switch f.Type {
-		case filters.FilterRegex:
+		case filters.FilterClassifier:
 			filter, err := filters.NewRegexFilter(f.Config)
 			if err != nil {
 				xlog.Error("Failed to configure regex", "err", err.Error())

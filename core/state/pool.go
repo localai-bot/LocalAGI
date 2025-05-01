@@ -341,6 +341,8 @@ func (a *AgentPool) startAgentWithConfig(name string, config *AgentConfig, obs O
 
 	if config.Model != "" {
 		model = config.Model
+	} else {
+		config.Model = model
 	}
 
 	if config.MCPBoxURL != "" {
@@ -351,12 +353,17 @@ func (a *AgentPool) startAgentWithConfig(name string, config *AgentConfig, obs O
 		config.PeriodicRuns = "10m"
 	}
 
+	// XXX: Why do we update the pool config from an Agent's config?
 	if config.APIURL != "" {
 		a.apiURL = config.APIURL
+	} else {
+		config.APIURL = a.apiURL
 	}
 
 	if config.APIKey != "" {
 		a.apiKey = config.APIKey
+	} else {
+		config.APIKey = a.apiKey
 	}
 
 	if config.LocalRAGURL != "" {
